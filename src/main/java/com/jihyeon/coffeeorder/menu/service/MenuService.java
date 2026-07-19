@@ -1,5 +1,7 @@
 package com.jihyeon.coffeeorder.menu.service;
 
+import com.jihyeon.coffeeorder.global.exception.BusinessException;
+import com.jihyeon.coffeeorder.global.exception.ErrorCode;
 import com.jihyeon.coffeeorder.menu.dto.MenuCreateRequest;
 import com.jihyeon.coffeeorder.menu.dto.MenuListResponse;
 import com.jihyeon.coffeeorder.menu.dto.MenuResponse;
@@ -32,5 +34,12 @@ public class MenuService {
                 .map(MenuResponse::from)
                 .toList();
         return new MenuListResponse(menus);
+    }
+
+    @Transactional(readOnly = true)
+    public MenuResponse findById(Long menuId) {
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
+        return MenuResponse.from(menu);
     }
 }

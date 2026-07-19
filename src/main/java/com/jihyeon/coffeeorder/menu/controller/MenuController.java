@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,5 +36,10 @@ public class MenuController {
     @GetMapping
     public ApiResponse<MenuListResponse> findMenus() {
         return ApiResponse.success(menuService.findOnSaleMenus());
+    }
+
+    @GetMapping("/{menuId}")
+    public ApiResponse<MenuResponse> findMenu(@PathVariable Long menuId) {
+        return ApiResponse.success(menuService.findById(menuId));
     }
 }

@@ -121,6 +121,7 @@ docker compose config
 - 비즈니스 예외 `BusinessException`
 - 전역 예외 처리 `GlobalExceptionHandler`
 - 메뉴 등록 API
+- 메뉴 단건 조회 API
 - 메뉴 목록 조회 API
 - 메뉴 API 기본 테스트
 
@@ -138,6 +139,16 @@ POST /api/v1/menus
   "price": 4500
 }
 ```
+
+잘못된 요청 값은 `INVALID_REQUEST`로 응답한다.
+
+### 메뉴 단건 조회
+
+```http
+GET /api/v1/menus/{menuId}
+```
+
+메뉴가 존재하지 않으면 `MENU_NOT_FOUND`로 응답한다.
 
 ### 메뉴 목록 조회
 
