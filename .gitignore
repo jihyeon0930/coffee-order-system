@@ -1,0 +1,15 @@
+.gradle/
+build/
+out/
+
+*.iml
+.idea/
+.vscode/
+
+.DS_Store
+
+logs/
+*.log
+
+.env
+application-secret.yml
