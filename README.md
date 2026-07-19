@@ -128,6 +128,10 @@ docker compose config
 - 포인트 충전 및 잔액 조회 API
 - 포인트 차감과 잔액 부족 검증
 - DB 비관적 락 기반 포인트 동시성 제어
+- 주문 및 주문 항목 저장과 서버 기준 금액 계산
+- 포인트 결제와 주문 저장의 단일 트랜잭션 처리
+- 주문 단건 및 회원별 목록 조회
+- 주문 완료 Spring 이벤트 발행
 
 ## API
 
@@ -189,18 +193,36 @@ GET /api/v1/members/{memberId}/points
 }
 ```
 
-충전 금액은 0보다 커야 한다. 포인트 차감은 향후 주문 서비스에서 `PointService.use()`를 호출하며,
+충전 금액은 0보다 커야 한다. 포인트 차감은 주문 서비스에서 `PointService.use()`를 호출하며,
 동일 회원의 동시 차감 요청은 DB 비관적 락으로 순차 처리한다.
+
+### 주문 생성 및 조회
+
+```http
+POST /api/v1/orders
+GET /api/v1/orders/{orderId}
+GET /api/v1/orders?memberId={memberId}
+```
+
+```json
+{
+  "memberId": 1,
+  "items": [
+    {"menuId": 1, "quantity": 2}
+  ]
+}
+```
+
+주문 금액은 저장된 메뉴 가격을 기준으로 서버에서 계산한다. 포인트 차감과 주문 저장은 하나의 트랜잭션으로 처리하며, 실패하면 모두 롤백된다.
 
 ## 향후 구현 계획
 
-1. 주문 생성과 포인트 결제 트랜잭션 연결
-2. 주문 내역 기반 인기 메뉴 SQL 집계 구현
-3. 인덱스 적용 전후 성능 비교
-4. Redis ZSET 기반 인기 메뉴 캐시 적용
-5. Spring Event와 `@Async`를 이용한 주문 후속 처리 분리
-6. Kafka Producer/Consumer 기반 주문 이벤트 연동
-7. k6 성능 테스트 작성
+1. 주문 내역 기반 인기 메뉴 SQL 집계 구현
+2. 인덱스 적용 전후 성능 비교
+3. Redis ZSET 기반 인기 메뉴 캐시 적용
+4. Spring Event와 `@Async`를 이용한 주문 후속 처리 분리
+5. Kafka Producer/Consumer 기반 주문 이벤트 연동
+6. k6 성능 테스트 작성
 
 ## 설계 메모
 
