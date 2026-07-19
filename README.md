@@ -124,6 +124,10 @@ docker compose config
 - 메뉴 단건 조회 API
 - 메뉴 목록 조회 API
 - 메뉴 API 기본 테스트
+- 사용자 생성 및 조회 API
+- 포인트 충전 및 잔액 조회 API
+- 포인트 차감과 잔액 부족 검증
+- DB 비관적 락 기반 포인트 동시성 제어
 
 ## API
 
@@ -158,17 +162,45 @@ GET /api/v1/menus
 
 메뉴가 없는 경우에도 예외가 아니라 빈 배열을 반환한다.
 
+### 사용자 생성
+
+```http
+POST /api/v1/members
+```
+
+```json
+{
+  "name": "Jihyeon"
+}
+```
+
+사용자는 포인트 잔액 0으로 생성된다.
+
+### 포인트 충전 및 조회
+
+```http
+POST /api/v1/members/{memberId}/points/charge
+GET /api/v1/members/{memberId}/points
+```
+
+```json
+{
+  "amount": 10000
+}
+```
+
+충전 금액은 0보다 커야 한다. 포인트 차감은 향후 주문 서비스에서 `PointService.use()`를 호출하며,
+동일 회원의 동시 차감 요청은 DB 비관적 락으로 순차 처리한다.
+
 ## 향후 구현 계획
 
-1. 사용자 및 포인트 충전 기능 구현
-2. 주문 생성과 포인트 결제 트랜잭션 구현
-3. 포인트 차감 시 DB 비관적 락 적용
-4. 주문 내역 기반 인기 메뉴 SQL 집계 구현
-5. 인덱스 적용 전후 성능 비교
-6. Redis ZSET 기반 인기 메뉴 캐시 적용
-7. Spring Event와 `@Async`를 이용한 주문 후속 처리 분리
-8. Kafka Producer/Consumer 기반 주문 이벤트 연동
-9. 동시성 테스트와 k6 성능 테스트 작성
+1. 주문 생성과 포인트 결제 트랜잭션 연결
+2. 주문 내역 기반 인기 메뉴 SQL 집계 구현
+3. 인덱스 적용 전후 성능 비교
+4. Redis ZSET 기반 인기 메뉴 캐시 적용
+5. Spring Event와 `@Async`를 이용한 주문 후속 처리 분리
+6. Kafka Producer/Consumer 기반 주문 이벤트 연동
+7. k6 성능 테스트 작성
 
 ## 설계 메모
 
