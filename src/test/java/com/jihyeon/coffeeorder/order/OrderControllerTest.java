@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.jihyeon.coffeeorder.member.entity.Member;
 import com.jihyeon.coffeeorder.member.repository.MemberRepository;
+import com.jihyeon.coffeeorder.member.repository.PointHistoryRepository;
 import com.jihyeon.coffeeorder.member.service.PointService;
 import com.jihyeon.coffeeorder.menu.entity.Menu;
 import com.jihyeon.coffeeorder.menu.repository.MenuRepository;
@@ -39,6 +40,9 @@ class OrderControllerTest {
     private MemberRepository memberRepository;
 
     @Autowired
+    private PointHistoryRepository pointHistoryRepository;
+
+    @Autowired
     private PointService pointService;
 
     private Member member;
@@ -48,6 +52,7 @@ class OrderControllerTest {
     void setUp() {
         orderRepository.deleteAll();
         menuRepository.deleteAll();
+        pointHistoryRepository.deleteAll();
         memberRepository.deleteAll();
         member = memberRepository.save(new Member("Jihyeon"));
         pointService.charge(member.getId(), 10000);

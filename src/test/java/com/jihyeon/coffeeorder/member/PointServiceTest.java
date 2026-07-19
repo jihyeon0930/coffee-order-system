@@ -8,6 +8,8 @@ import com.jihyeon.coffeeorder.global.exception.ErrorCode;
 import com.jihyeon.coffeeorder.member.dto.PointResponse;
 import com.jihyeon.coffeeorder.member.entity.Member;
 import com.jihyeon.coffeeorder.member.repository.MemberRepository;
+import com.jihyeon.coffeeorder.member.repository.PointHistoryRepository;
+import com.jihyeon.coffeeorder.member.entity.PointHistoryType;
 import com.jihyeon.coffeeorder.member.service.PointService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,10 +27,14 @@ class PointServiceTest {
     @Autowired
     private MemberRepository memberRepository;
 
+    @Autowired
+    private PointHistoryRepository pointHistoryRepository;
+
     private Member member;
 
     @BeforeEach
     void setUp() {
+        pointHistoryRepository.deleteAll();
         memberRepository.deleteAll();
         member = memberRepository.save(new Member("Jihyeon"));
     }
@@ -38,6 +44,14 @@ class PointServiceTest {
         PointResponse response = pointService.charge(member.getId(), 10000);
 
         assertThat(response.pointBalance()).isEqualTo(10000);
+        assertThat(pointHistoryRepository.findAllByMemberIdOrderByCreatedAtAsc(member.getId()))
+                .singleElement()
+                .satisfies(history -> {
+                    assertThat(history.getType()).isEqualTo(PointHistoryType.EARN);
+                    assertThat(history.getChangeAmount()).isEqualTo(10000);
+                    assertThat(history.getBalanceAfter()).isEqualTo(10000);
+                    assertThat(history.getDescription()).isEqualTo("포인트 충전");
+                });
     }
 
     @Test
@@ -47,6 +61,14 @@ class PointServiceTest {
         PointResponse response = pointService.use(member.getId(), 4500);
 
         assertThat(response.pointBalance()).isEqualTo(5500);
+        assertThat(pointHistoryRepository.findAllByMemberIdOrderByCreatedAtAsc(member.getId()))
+                .hasSize(2)
+                .last()
+                .satisfies(history -> {
+                    assertThat(history.getType()).isEqualTo(PointHistoryType.USE);
+                    assertThat(history.getChangeAmount()).isEqualTo(-4500);
+                    assertThat(history.getBalanceAfter()).isEqualTo(5500);
+                });
     }
 
     @Test
@@ -58,6 +80,9 @@ class PointServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.POINT_NOT_ENOUGH);
         assertThat(pointService.getBalance(member.getId()).pointBalance()).isEqualTo(1000);
+        assertThat(pointHistoryRepository.findAllByMemberIdOrderByCreatedAtAsc(member.getId()))
+                .singleElement()
+                .satisfies(history -> assertThat(history.getType()).isEqualTo(PointHistoryType.EARN));
     }
 
     @Test

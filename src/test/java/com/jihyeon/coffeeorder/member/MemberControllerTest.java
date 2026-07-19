@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.jihyeon.coffeeorder.member.entity.Member;
 import com.jihyeon.coffeeorder.member.repository.MemberRepository;
+import com.jihyeon.coffeeorder.member.repository.PointHistoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +28,12 @@ class MemberControllerTest {
     @Autowired
     private MemberRepository memberRepository;
 
+    @Autowired
+    private PointHistoryRepository pointHistoryRepository;
+
     @BeforeEach
     void setUp() {
+        pointHistoryRepository.deleteAll();
         memberRepository.deleteAll();
     }
 

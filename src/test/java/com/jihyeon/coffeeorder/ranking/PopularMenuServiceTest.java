@@ -15,6 +15,9 @@ import com.jihyeon.coffeeorder.ranking.repository.PopularMenuRepository;
 import com.jihyeon.coffeeorder.ranking.service.PopularMenuService;
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
+import org.mockito.ArgumentCaptor;
+import org.springframework.data.domain.PageRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -36,7 +39,8 @@ class PopularMenuServiceTest {
     @Test
     void cacheMissQueriesDatabaseAndStoresResult() {
         when(popularMenuCache.get()).thenReturn(Optional.empty());
-        when(popularMenuRepository.findPopularMenus(any(OrderStatus.class), any(Pageable.class)))
+        when(popularMenuRepository.findPopularMenus(
+                any(OrderStatus.class), any(LocalDateTime.class), any(LocalDateTime.class), any(Pageable.class)))
                 .thenReturn(List.of(projection));
         when(projection.getMenuId()).thenReturn(1L);
         when(projection.getMenuName()).thenReturn("Americano");
@@ -46,7 +50,15 @@ class PopularMenuServiceTest {
         PopularMenuListResponse response = service().findPopularMenus();
 
         assertThat(response.menus()).containsExactly(new PopularMenuResponse(1, 1L, "Americano", 7, 3));
-        verify(popularMenuRepository).findPopularMenus(any(OrderStatus.class), any(Pageable.class));
+        ArgumentCaptor<LocalDateTime> startCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+        ArgumentCaptor<LocalDateTime> endCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(popularMenuRepository).findPopularMenus(
+                org.mockito.ArgumentMatchers.eq(OrderStatus.COMPLETED),
+                startCaptor.capture(),
+                endCaptor.capture(),
+                org.mockito.ArgumentMatchers.eq(PageRequest.of(0, 3))
+        );
+        assertThat(startCaptor.getValue()).isEqualTo(endCaptor.getValue().minusDays(7));
         verify(popularMenuCache).put(response.menus());
     }
 
@@ -58,7 +70,7 @@ class PopularMenuServiceTest {
         PopularMenuListResponse response = service().findPopularMenus();
 
         assertThat(response.menus()).isEqualTo(cached);
-        verify(popularMenuRepository, never()).findPopularMenus(any(), any());
+        verify(popularMenuRepository, never()).findPopularMenus(any(), any(), any(), any());
         verify(popularMenuCache, never()).put(any());
     }
 

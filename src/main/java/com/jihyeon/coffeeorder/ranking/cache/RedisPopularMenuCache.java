@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RedisPopularMenuCache implements PopularMenuCache {
 
-    public static final String CACHE_KEY = "popular-menus:v1:top:10";
+    public static final String CACHE_KEY = "popular-menus:v2:last-7-days:top:3";
 
     private static final Logger log = LoggerFactory.getLogger(RedisPopularMenuCache.class);
     private static final TypeReference<List<PopularMenuResponse>> VALUE_TYPE = new TypeReference<>() {

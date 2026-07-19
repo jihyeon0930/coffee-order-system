@@ -4,7 +4,9 @@ import com.jihyeon.coffeeorder.global.exception.BusinessException;
 import com.jihyeon.coffeeorder.global.exception.ErrorCode;
 import com.jihyeon.coffeeorder.member.dto.PointResponse;
 import com.jihyeon.coffeeorder.member.entity.Member;
+import com.jihyeon.coffeeorder.member.entity.PointHistory;
 import com.jihyeon.coffeeorder.member.repository.MemberRepository;
+import com.jihyeon.coffeeorder.member.repository.PointHistoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,15 +14,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class PointService {
 
     private final MemberRepository memberRepository;
+    private final PointHistoryRepository pointHistoryRepository;
 
-    public PointService(MemberRepository memberRepository) {
+    public PointService(MemberRepository memberRepository, PointHistoryRepository pointHistoryRepository) {
         this.memberRepository = memberRepository;
+        this.pointHistoryRepository = pointHistoryRepository;
     }
 
     @Transactional
     public PointResponse charge(Long memberId, long amount) {
         Member member = findMemberForUpdate(memberId);
         member.charge(amount);
+        pointHistoryRepository.save(PointHistory.earn(member, amount, "포인트 충전"));
         return PointResponse.from(member);
     }
 
@@ -33,6 +38,7 @@ public class PointService {
     public PointResponse use(Long memberId, long amount) {
         Member member = findMemberForUpdate(memberId);
         member.use(amount);
+        pointHistoryRepository.save(PointHistory.use(member, amount, "주문 결제"));
         return PointResponse.from(member);
     }
 

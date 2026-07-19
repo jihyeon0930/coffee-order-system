@@ -7,6 +7,7 @@ import com.jihyeon.coffeeorder.global.exception.BusinessException;
 import com.jihyeon.coffeeorder.global.exception.ErrorCode;
 import com.jihyeon.coffeeorder.member.entity.Member;
 import com.jihyeon.coffeeorder.member.repository.MemberRepository;
+import com.jihyeon.coffeeorder.member.repository.PointHistoryRepository;
 import com.jihyeon.coffeeorder.member.service.PointService;
 import com.jihyeon.coffeeorder.menu.entity.Menu;
 import com.jihyeon.coffeeorder.menu.repository.MenuRepository;
@@ -51,6 +52,9 @@ class OrderServiceTest {
     private MemberRepository memberRepository;
 
     @Autowired
+    private PointHistoryRepository pointHistoryRepository;
+
+    @Autowired
     private ApplicationEvents applicationEvents;
 
     private Member member;
@@ -61,6 +65,7 @@ class OrderServiceTest {
     void setUp() {
         orderRepository.deleteAll();
         menuRepository.deleteAll();
+        pointHistoryRepository.deleteAll();
         memberRepository.deleteAll();
 
         member = memberRepository.save(new Member("Jihyeon"));
@@ -106,6 +111,7 @@ class OrderServiceTest {
         assertThat(pointService.getBalance(poorMember.getId()).pointBalance()).isEqualTo(1000);
         assertThat(orderRepository.count()).isZero();
         assertThat(applicationEvents.stream(OrderCompletedEvent.class)).isEmpty();
+        assertThat(pointHistoryRepository.findAllByMemberIdOrderByCreatedAtAsc(poorMember.getId())).hasSize(1);
     }
 
     @Test
@@ -118,6 +124,7 @@ class OrderServiceTest {
 
         assertThat(pointService.getBalance(member.getId()).pointBalance()).isEqualTo(30000);
         assertThat(orderRepository.count()).isZero();
+        assertThat(pointHistoryRepository.findAllByMemberIdOrderByCreatedAtAsc(member.getId())).hasSize(1);
     }
 
     @Test

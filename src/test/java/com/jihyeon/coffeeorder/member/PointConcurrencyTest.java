@@ -6,6 +6,7 @@ import com.jihyeon.coffeeorder.global.exception.BusinessException;
 import com.jihyeon.coffeeorder.global.exception.ErrorCode;
 import com.jihyeon.coffeeorder.member.entity.Member;
 import com.jihyeon.coffeeorder.member.repository.MemberRepository;
+import com.jihyeon.coffeeorder.member.repository.PointHistoryRepository;
 import com.jihyeon.coffeeorder.member.service.PointService;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +32,12 @@ class PointConcurrencyTest {
     @Autowired
     private MemberRepository memberRepository;
 
+    @Autowired
+    private PointHistoryRepository pointHistoryRepository;
+
     @BeforeEach
     void setUp() {
+        pointHistoryRepository.deleteAll();
         memberRepository.deleteAll();
     }
 
@@ -84,5 +89,6 @@ class PointConcurrencyTest {
         assertThat(finalBalance).isZero();
         assertThat(finalBalance).isGreaterThanOrEqualTo(0);
         assertThat(successCount.get() * useAmount + finalBalance).isEqualTo(1000);
+        assertThat(pointHistoryRepository.findAllByMemberIdOrderByCreatedAtAsc(member.getId())).hasSize(11);
     }
 }

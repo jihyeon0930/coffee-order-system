@@ -7,6 +7,7 @@ import com.jihyeon.coffeeorder.ranking.dto.PopularMenuResponse;
 import com.jihyeon.coffeeorder.ranking.repository.PopularMenuProjection;
 import com.jihyeon.coffeeorder.ranking.repository.PopularMenuRepository;
 import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PopularMenuService {
 
-    private static final int POPULAR_MENU_LIMIT = 10;
+    private static final int POPULAR_MENU_LIMIT = 3;
+    private static final int POPULAR_MENU_PERIOD_DAYS = 7;
 
     private final PopularMenuRepository popularMenuRepository;
     private final PopularMenuCache popularMenuCache;
@@ -33,8 +35,12 @@ public class PopularMenuService {
     }
 
     private PopularMenuListResponse findFromDatabaseAndCache() {
+        LocalDateTime endAt = LocalDateTime.now();
+        LocalDateTime startAt = endAt.minusDays(POPULAR_MENU_PERIOD_DAYS);
         List<PopularMenuProjection> rows = popularMenuRepository.findPopularMenus(
                 OrderStatus.COMPLETED,
+                startAt,
+                endAt,
                 PageRequest.of(0, POPULAR_MENU_LIMIT)
         );
         List<PopularMenuResponse> menus = new ArrayList<>(rows.size());

@@ -10,6 +10,7 @@ import com.jihyeon.coffeeorder.order.repository.OrderRepository;
 import com.jihyeon.coffeeorder.ranking.repository.PopularMenuProjection;
 import com.jihyeon.coffeeorder.ranking.repository.PopularMenuRepository;
 import java.util.List;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,8 @@ class PopularMenuRepositoryTest {
     private Menu americano;
     private Menu latte;
     private Menu tea;
+    private Menu mocha;
+    private final LocalDateTime now = LocalDateTime.of(2026, 7, 20, 12, 0);
 
     @BeforeEach
     void setUp() {
@@ -41,6 +44,7 @@ class PopularMenuRepositoryTest {
         americano = menuRepository.save(new Menu("Americano", 4500));
         latte = menuRepository.save(new Menu("Latte", 5000));
         tea = menuRepository.save(new Menu("Tea", 4000));
+        mocha = menuRepository.save(new Menu("Mocha", 5500));
     }
 
     @Test
@@ -49,28 +53,29 @@ class PopularMenuRepositoryTest {
     }
 
     @Test
-    void aggregateQuantityAndSortByQuantityOrderCountAndMenuId() {
-        saveCompletedOrder(item(americano, 2), item(tea, 1));
-        saveCompletedOrder(item(latte, 1));
-        saveCompletedOrder(item(latte, 1));
-        saveCompletedOrder(item(tea, 1));
+    void aggregateLastSevenDaysAndReturnOnlyTopThree() {
+        saveCompletedOrder(now.minusDays(1), item(americano, 4));
+        saveCompletedOrder(now.minusDays(2), item(latte, 3));
+        saveCompletedOrder(now.minusDays(3), item(tea, 2));
+        saveCompletedOrder(now.minusDays(4), item(mocha, 1));
+        saveCompletedOrder(now.minusDays(8), item(mocha, 100));
 
         List<PopularMenuProjection> result = findPopularMenus();
 
         assertThat(result).extracting(PopularMenuProjection::getMenuId)
-                .containsExactly(latte.getId(), tea.getId(), americano.getId());
+                .containsExactly(americano.getId(), latte.getId(), tea.getId());
         assertThat(result).extracting(PopularMenuProjection::getTotalQuantity)
-                .containsExactly(2L, 2L, 2L);
-        assertThat(result).extracting(PopularMenuProjection::getOrderCount)
-                .containsExactly(2L, 2L, 1L);
+                .containsExactly(4L, 3L, 2L);
+        assertThat(result).hasSize(3);
     }
 
     @Test
     void excludeCanceledOrder() {
-        saveCompletedOrder(item(americano, 1));
+        saveCompletedOrder(now.minusHours(1), item(americano, 1));
         Order canceled = new Order(1L);
         canceled.addItem(latte, 100);
         canceled.cancel();
+        org.springframework.test.util.ReflectionTestUtils.setField(canceled, "orderedAt", now.minusHours(1));
         orderRepository.saveAndFlush(canceled);
 
         List<PopularMenuProjection> result = findPopularMenus();
@@ -81,15 +86,34 @@ class PopularMenuRepositoryTest {
         });
     }
 
-    private List<PopularMenuProjection> findPopularMenus() {
-        return popularMenuRepository.findPopularMenus(OrderStatus.COMPLETED, PageRequest.of(0, 10));
+    @Test
+    void sortTiesByOrderCountThenMenuIdConsistently() {
+        saveCompletedOrder(now.minusDays(1), item(americano, 2));
+        saveCompletedOrder(now.minusDays(1), item(latte, 1));
+        saveCompletedOrder(now.minusDays(2), item(latte, 1));
+        saveCompletedOrder(now.minusDays(1), item(tea, 2));
+
+        List<PopularMenuProjection> result = findPopularMenus();
+
+        assertThat(result).extracting(PopularMenuProjection::getMenuId)
+                .containsExactly(latte.getId(), americano.getId(), tea.getId());
     }
 
-    private void saveCompletedOrder(OrderLine... lines) {
+    private List<PopularMenuProjection> findPopularMenus() {
+        return popularMenuRepository.findPopularMenus(
+                OrderStatus.COMPLETED,
+                now.minusDays(7),
+                now,
+                PageRequest.of(0, 3)
+        );
+    }
+
+    private void saveCompletedOrder(LocalDateTime orderedAt, OrderLine... lines) {
         Order order = new Order(1L);
         for (OrderLine line : lines) {
             order.addItem(line.menu(), line.quantity());
         }
+        org.springframework.test.util.ReflectionTestUtils.setField(order, "orderedAt", orderedAt);
         orderRepository.saveAndFlush(order);
     }
 
