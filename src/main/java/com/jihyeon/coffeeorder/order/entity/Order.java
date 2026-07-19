@@ -12,13 +12,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Index;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "orders", indexes = {
+        @Index(name = "idx_orders_status_ordered_at", columnList = "status, ordered_at")
+})
 public class Order {
 
     @Id
@@ -35,7 +38,7 @@ public class Order {
     @Column(nullable = false)
     private long totalAmount;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "ordered_at", nullable = false, updatable = false)
     private LocalDateTime orderedAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -55,6 +58,10 @@ public class Order {
         item.setOrder(this);
         items.add(item);
         totalAmount = Math.addExact(totalAmount, item.getLineAmount());
+    }
+
+    public void cancel() {
+        this.status = OrderStatus.CANCELED;
     }
 
     public Long getId() {

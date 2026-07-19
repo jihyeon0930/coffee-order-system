@@ -24,3 +24,7 @@ spring:
 logging:
   level:
     org.hibernate.SQL: debug
+
+ranking:
+  cache:
+    ttl: ${RANKING_CACHE_TTL:5m}

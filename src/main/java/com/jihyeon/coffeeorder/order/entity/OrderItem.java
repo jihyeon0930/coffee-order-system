@@ -10,9 +10,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Index;
 
 @Entity
-@Table(name = "order_items")
+@Table(name = "order_items", indexes = {
+        @Index(name = "idx_order_items_order_menu", columnList = "order_id, menu_id")
+})
 public class OrderItem {
 
     @Id
@@ -23,7 +26,7 @@ public class OrderItem {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @Column(nullable = false)
+    @Column(name = "menu_id", nullable = false)
     private Long menuId;
 
     @Column(nullable = false, length = 100)
