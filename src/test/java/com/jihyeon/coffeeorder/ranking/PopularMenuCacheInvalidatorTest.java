@@ -2,7 +2,6 @@ package com.jihyeon.coffeeorder.ranking;
 
 import static org.mockito.Mockito.verify;
 
-import com.jihyeon.coffeeorder.order.event.OrderCompletedEvent;
 import com.jihyeon.coffeeorder.ranking.cache.PopularMenuCache;
 import com.jihyeon.coffeeorder.ranking.event.PopularMenuCacheInvalidator;
 import org.junit.jupiter.api.Test;
@@ -20,7 +19,7 @@ class PopularMenuCacheInvalidatorTest {
     void evictCacheAfterOrderCompletionEvent() {
         PopularMenuCacheInvalidator invalidator = new PopularMenuCacheInvalidator(popularMenuCache);
 
-        invalidator.handle(new OrderCompletedEvent(1L, 1L, 4500));
+        invalidator.invalidate();
 
         verify(popularMenuCache).evict();
     }

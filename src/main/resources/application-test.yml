@@ -20,6 +20,26 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
+    listener:
+      auto-startup: false
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: com.jihyeon.coffeeorder.order.event
+
+kafka:
+  producer:
+    enabled: false
+  topic:
+    order-completed: coffee.order.completed.v1
+  consumer:
+    order-completed-group: ranking-order-completed-v1
 
 ranking:
   cache:
