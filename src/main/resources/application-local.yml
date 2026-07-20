@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/cafe}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:12345678}
+    url: ${DB_URL:jdbc:mysql://localhost:3307/coffee_order}
+    username: ${DB_USERNAME:coffee}
+    password: ${DB_PASSWORD:coffee}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:

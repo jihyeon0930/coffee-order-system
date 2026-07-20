@@ -21,14 +21,17 @@
 ```bash
 cp .env.example .env
 docker compose up -d
+set -a
+source .env
+set +a
 ./gradlew bootRun
 ```
 
-Spring Boot가 셸의 `.env`를 자동 로드하지는 않는다. `docker compose`는 `.env`를 읽지만 애플리케이션 실행 전에는 해당 값을 셸 환경변수로 내보내거나 IDE 실행 설정에 등록해야 한다. 기본값을 쓸 수도 있지만 `application-local.yml`의 기본 DB명 `cafe`와 Compose 기본 DB명 `coffee_order`가 다르므로 `.env.example`의 `DB_URL` 사용을 권장한다.
+Spring Boot가 셸의 `.env`를 자동 로드하지는 않는다. `docker compose`는 `.env`를 읽지만 애플리케이션 실행 전에는 `set -a && source .env && set +a`로 값을 셸 환경변수에 올리거나 IDE 실행 설정에 등록해야 한다. `application-local.yml`의 기본값도 Docker Compose 기본값과 맞춰두었기 때문에 환경변수를 따로 올리지 않아도 로컬 기본 구성에서는 실행할 수 있다.
 
 | 환경변수 | 예시 / 역할 |
 | --- | --- |
-| `DB_URL` | `jdbc:mysql://localhost:3306/coffee_order` |
+| `DB_URL` | `jdbc:mysql://localhost:3307/coffee_order` |
 | `DB_USERNAME`, `DB_PASSWORD` | MySQL 인증 정보 |
 | `REDIS_HOST`, `REDIS_PORT` | 인기 메뉴 캐시 Redis |
 | `KAFKA_BOOTSTRAP_SERVERS` | 주문 완료 이벤트 Kafka broker |
